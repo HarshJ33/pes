@@ -1,7 +1,7 @@
 // frontend/src/components/teacher/TeacherDashboard.tsx
 import { useState, useEffect, type JSX } from "react";
 import { useNavigate } from "react-router-dom";
-import { FiMenu, FiHome, FiShield, FiBook, FiEdit, FiLogOut, FiSun, FiMoon,FiAlertCircle,FiCheckCircle } from "react-icons/fi";
+import { FiMenu, FiHome, FiShield, FiBook, FiEdit, FiLogOut, FiSun, FiMoon,FiAlertCircle,FiCheckCircle, FiTrendingUp } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import TeacherResolvedTickets from "../components/teacher/TeacherResolvedTickets"; 
 import TeacherEscalatedTickets from "../components/teacher/TeacherEscalatedTickets";
@@ -11,7 +11,9 @@ import TeacherCourses from "../components/teacher/TeacherCourses";
 import TeacherExams from "../components/teacher/TeacherExams";
 import ChangePassword from "../components/teacher/ChangePassword";
 import StudentsView from "../components/teacher/StudentsView";
+import TeacherEvaluatorCredibility from "../components/teacher/TeacherEvaluatorCredibility";
 import { PiStudent } from "react-icons/pi";
+import type { IconType } from "react-icons";
 
 const PORT = import.meta.env.VITE_BACKEND_PORT || 5000;
 
@@ -108,16 +110,18 @@ const TeacherDashboard = () => {
     courses: <TeacherCourses />,
     exams: <TeacherExams />,
     Students:<StudentsView/>,
+    credibility: <TeacherEvaluatorCredibility darkMode={darkMode} />,
     tickets: <TeacherEscalatedTickets />,
      resolved: <TeacherResolvedTickets />,
   };
 
-  const icons: Record<string, any> = {
+  const icons: Record<string, IconType> = {
     home: FiHome,
     roles: FiShield,
     courses: FiBook,
     exams: FiEdit,
     Students:PiStudent,
+    credibility: FiTrendingUp,
      tickets: FiAlertCircle,
      resolved: FiCheckCircle,
   };

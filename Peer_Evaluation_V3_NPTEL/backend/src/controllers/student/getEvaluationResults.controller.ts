@@ -61,6 +61,8 @@ export const getEvaluationResults = async (
           marksList: [],
           feedbackList: [],
           evaluators: [],
+          credibilityScores: [], // For weighted calculation
+          trustWeights: [],
         };
       }
 
@@ -78,6 +80,12 @@ export const getEvaluationResults = async (
       resultsMap[examKey].marksList.push(ev.marks);
       resultsMap[examKey].feedbackList.push(ev.feedback);
       resultsMap[examKey].evaluators.push(evaluator);
+      resultsMap[examKey].credibilityScores.push(
+        ev.evaluatorCredibilityScore || 0.5
+      ); // Default 0.5 if not calculated
+      resultsMap[examKey].trustWeights.push(
+        ev.evaluatorTrustWeight || 1.0
+      ); // Default 1.0 if not calculated
     });
 
     const results = Object.values(resultsMap).map((group: any) => {
@@ -86,13 +94,37 @@ export const getEvaluationResults = async (
         (marks: number[]) => marks.reduce((sum, mark) => sum + mark, 0)
       );
 
-      const avg =
+      // Calculate simple average (for comparison)
+      const simpleAvg =
         totalPerEvaluator.length > 0
           ? (
               totalPerEvaluator.reduce((sum: number, total: number) => sum + total, 0) /
               totalPerEvaluator.length
             ).toFixed(2)
           : null;
+
+      // Calculate weighted average based on evaluator credibility
+      let weightedAvg = simpleAvg;
+      if (totalPerEvaluator.length > 0) {
+        let weightedSum = 0;
+        let weightSum = 0;
+
+        for (let i = 0; i < totalPerEvaluator.length; i++) {
+          const weight = group.trustWeights[i] || 1.0;
+          weightedSum += totalPerEvaluator[i] * weight;
+          weightSum += weight;
+        }
+
+        weightedAvg = (weightSum > 0 ? (weightedSum / weightSum).toFixed(2) : simpleAvg);
+      }
+
+      // Build evaluator details with credibility info
+      const evaluatorDetails = group.evaluators.map((ev: any, idx: number) => ({
+        _id: ev._id,
+        name: ev.name,
+        credibilityScore: group.credibilityScores[idx],
+        trustWeight: group.trustWeights[idx],
+      }));
 
       return {
         exam: {
@@ -103,10 +135,24 @@ export const getEvaluationResults = async (
           batchId: group.exam.batch?._id || null,
           batchName: group.exam.batch?.name || "Unknown Batch",
         },
-        averageMarks: avg,
+        grading: {
+          simpleAverage: simpleAvg,
+          weightedAverage: weightedAvg,
+          // Show the weighted average as the primary grade
+          finalGrade: weightedAvg,
+          description: "Grade calculated with reviewer credibility weighting",
+        },
         marks: group.marksList,
         feedback: group.feedbackList,
-        evaluators: group.evaluators,
+        evaluators: evaluatorDetails,
+        credibilityInfo: {
+          averageCredibilityScore: (
+            group.credibilityScores.reduce((a: number, b: number) => a + b, 0) /
+            group.credibilityScores.length
+          ).toFixed(2),
+          trustWeightedCount: group.trustWeights.filter((w: number) => w > 1).length,
+          unreliableEvaluatorCount: group.trustWeights.filter((w: number) => w < 0.8).length,
+        },
       };
     });
 
