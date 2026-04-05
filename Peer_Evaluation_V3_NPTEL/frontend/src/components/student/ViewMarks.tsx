@@ -17,6 +17,8 @@ interface Course {
 interface Evaluator {
   _id: string;
   name: string;
+  credibilityScore: number;
+  trustWeight: number;
 }
 
 interface ExamResult {
@@ -28,10 +30,20 @@ interface ExamResult {
     batchId?: string;
     batchName?: string;
   };
-  averageMarks: string | null;
+  grading: {
+    simpleAverage: string;
+    weightedAverage: string;
+    finalGrade: string;
+    description: string;
+  };
   marks: number[][];
   feedback: string[];
   evaluators: Evaluator[];
+  credibilityInfo: {
+    averageCredibilityScore: string;
+    trustWeightedCount: number;
+    unreliableEvaluatorCount: number;
+  };
 }
 
 type Props = {
@@ -170,7 +182,23 @@ const ViewMarks = ({ darkMode }: Props) => {
                   <div className="text-sm text-gray-400">
                     Course: {res.exam.courseName} | Batch: {res.exam.batchName}
                   </div>
-                  <div className="text-sm">Average Marks: {res.averageMarks}</div>
+                  <div className="text-sm font-medium">
+                    Final Grade: {res.grading.finalGrade} 
+                    <span className="text-xs text-gray-500 ml-2">
+                      (Weighted by reviewer credibility)
+                    </span>
+                  </div>
+                  <div className="text-xs text-gray-500 mt-1">
+                    Simple Average: {res.grading.simpleAverage} | 
+                    Credibility-Weighted: {res.grading.weightedAverage}
+                  </div>
+                  {res.credibilityInfo && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      Avg Evaluator Credibility: {res.credibilityInfo.averageCredibilityScore} | 
+                      Trust-Weighted Reviews: {res.credibilityInfo.trustWeightedCount} | 
+                      Unreliable Evaluators: {res.credibilityInfo.unreliableEvaluatorCount}
+                    </div>
+                  )}
                 </div>
                 <button
                   className="bg-indigo-600 text-white px-4 py-2 rounded-xl"
@@ -189,16 +217,31 @@ const ViewMarks = ({ darkMode }: Props) => {
                     const key = `${res.exam._id}-${idx}`;
                     return (
                       <div key={idx} className={`border rounded-xl px-4 py-3 ${darkMode ? 'bg-gray-700 border-gray-600' : 'bg-gray-50'}`}>
-                        <div className="font-medium">Evaluator: {evaluator?.name || `Peer ${idx + 1}`}</div>
-                        <div className="text-sm">Marks: {markSet.join(", ")}</div>
-                        <div className="text-sm">Feedback: {res.feedback[idx] || "No feedback"}</div>
-
-                        <button
-                          className="text-blue-400 underline mt-1 text-sm"
-                          onClick={() => toggleRaiseTicket(key)}
-                        >
-                          {raiseTicketMap[key] ? "Cancel" : "Raise Ticket"}
-                        </button>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="font-medium">Evaluator: {evaluator?.name || `Peer ${idx + 1}`}</div>
+                            <div className="text-sm">Marks: {markSet.join(", ")}</div>
+                            <div className="text-sm">Feedback: {res.feedback[idx] || "No feedback"}</div>
+                            {evaluator && (
+                              <div className="text-xs mt-1 text-gray-600">
+                                Credibility: {(evaluator.credibilityScore * 100).toFixed(1)}% | 
+                                Trust Weight: {evaluator.trustWeight.toFixed(2)}x
+                                {evaluator.trustWeight < 0.8 && (
+                                  <span className="text-red-500 ml-1">⚠️ Low Trust</span>
+                                )}
+                                {evaluator.trustWeight > 1.2 && (
+                                  <span className="text-green-500 ml-1">⭐ High Trust</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          <button
+                            className="text-blue-400 underline mt-1 text-sm"
+                            onClick={() => toggleRaiseTicket(key)}
+                          >
+                            {raiseTicketMap[key] ? "Cancel" : "Raise Ticket"}
+                          </button>
+                        </div>
 
                         {raiseTicketMap[key] && (
                           <div className="mt-2">

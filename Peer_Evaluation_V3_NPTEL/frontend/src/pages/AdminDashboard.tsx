@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { FiMoon, FiSun } from 'react-icons/fi';
 
+
 const PORT = import.meta.env.VITE_BACKEND_PORT || 5000;
 
-type Tab = 'home' | 'course' | 'batch'| 'role' ;
+type Tab = 'home' | 'course' | 'batch'| 'role';
 type Course = {
   _id: string;
   name: string;
@@ -217,7 +218,7 @@ const Button = ({
   currentPalette: Palette
 }) => {
   const getButtonStyles = (colorKey: keyof Palette, textColorKey: 'white' | 'text-dark' = 'text-dark') => {
-    let bgColor = currentPalette[colorKey];
+    const bgColor = currentPalette[colorKey];
     let textColor = textColorKey === 'white' ? 'white' : currentPalette[textColorKey];
 
     if (colorKey === 'accent-purple' || colorKey === 'accent-pink') {
@@ -552,6 +553,7 @@ const AdminDashboard = () => {
                 { label: 'Manage Courses', tab: 'course' },
                 { label: 'Manage Batches', tab: 'batch' },
                 { label: 'Manage Roles', tab: 'role' },
+                
               ].map((btn) => (
                 <button
                   key={btn.tab}
@@ -927,6 +929,7 @@ const AdminDashboard = () => {
             </Card>
           </div>
         );
+      
       default:
         return null;
     }

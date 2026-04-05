@@ -16,6 +16,13 @@ import {
   updateStudentTaRole,
 } from "../../controllers/admin/course.controller.ts";
 
+import {
+  calculateEvaluatorCredibility,
+  getEvaluatorCredibilityStats_Controller,
+  flagEvaluatorAsUnreliable,
+  adjustTrustWeight,
+} from "../../controllers/admin/evaluatorCredibility.controller.ts";
+
 import { authMiddleware } from "../../middlewares/authMiddleware.ts";      
 import { authorizeRoles } from "../../middlewares/authorizeRoles.ts";   
 import { User } from '../../models/User.ts'; 
@@ -53,6 +60,13 @@ router.get('/batches/',authMiddleware,authorizeRoles("admin"), getAllBatches);
 //router.get('/batches/:id',authMiddleware,authorizeRoles("admin"), getBatchById);
 router.post("/update-role", updateStudentTaRole);
 router.post('/create-batch-with-names', createBatchWithNames);
+
+// Evaluator Credibility Scoring Routes
+router.post('/evaluator-credibility/calculate/:examId', authMiddleware, authorizeRoles('admin', 'teacher'), calculateEvaluatorCredibility);
+router.get('/evaluator-credibility/stats/:examId', authMiddleware, authorizeRoles('admin', 'teacher'), getEvaluatorCredibilityStats_Controller);
+router.put('/evaluator-credibility/flag/:evaluatorId/:examId', authMiddleware, authorizeRoles('admin', 'teacher'), flagEvaluatorAsUnreliable);
+router.put('/evaluator-credibility/trust-weight/:evaluatorId/:examId', authMiddleware, authorizeRoles('admin', 'teacher'), adjustTrustWeight);
+
 router.delete("/:courseId", deleteCourseAndBatches);
 export default router;
 

@@ -318,7 +318,15 @@ export const completeUncheckedEvaluation = async (
     }
     evaluation.status = 'completed';
     evaluation.flagged = false; // Remove the flag since it's now completed
-    evaluation.evaluator = taId; // Update evaluator to TA since TA completed it
+    
+    // Preserve the original evaluator and mark as TA-corrected
+    if (!evaluation.isTACorrected) {
+      evaluation.originalEvaluator = evaluation.evaluator; // Store the original peer evaluator
+      evaluation.isTACorrected = true; // Mark that a TA corrected this
+      evaluation.taCorrector = taId; // Track which TA corrected it
+    }
+    evaluation.evaluator = taId; // Update evaluator to TA for aggregation purposes
+    
     await evaluation.save();
 
     // Close the ticket

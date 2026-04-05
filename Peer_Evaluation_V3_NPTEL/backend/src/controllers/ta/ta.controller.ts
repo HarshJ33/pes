@@ -385,6 +385,15 @@ export const resolveTicket = async (
         evaluation.feedback = feedback;
       }
       evaluation.status = 'completed';
+      
+      // Preserve the original evaluator if this is the first TA correction
+      if (!evaluation.isTACorrected) {
+        evaluation.originalEvaluator = evaluation.evaluator; // Store the original peer evaluator
+        evaluation.isTACorrected = true; // Mark that a TA corrected this
+        evaluation.taCorrector = taId; // Track which TA corrected it
+        evaluation.evaluator = taId; // Update evaluator to TA for aggregation purposes
+      }
+      
       await evaluation.save();
     }
 
